@@ -1,0 +1,25 @@
+services:
+  lightnovel_scraper:
+    image: ghcr.io/lostontheline/lightnovel_scraper:latest
+    container_name: lightnovel_scraper
+    environment:
+      - SYNC_INTERVAL_HOURS=1  # Default to 1 hour
+    volumes:
+      - /volume1/docker/lightnovel/data:/data
+  #  ports:
+  #    - 
+  #  restart: unless-stopped
+  github_push:
+    image: ghcr.io/lostontheline/github_push:latest
+    container_name: github_push
+    environment:
+      - SYNC_INTERVAL_HOURS: 1  # Default to 1 hour
+      - GITHUB_USER:            # Replace with Your GitHub username.
+      - GITHUB_REPO:            # Replace with Your repository name.
+      - GITHUB_TOKEN:           # Replace with Your PAT with repo scope.
+      - GITHUB_EMAIL:           # Replace with Your GitHub email.
+    volumes:
+      - /volume1/docker/lightnovel/data:/data
+  #  ports:
+  #    - 
+  #  restart: unless-stopped
