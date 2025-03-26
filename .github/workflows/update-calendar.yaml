@@ -22,7 +22,7 @@ jobs:
         env:
           GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}
           CALENDAR_ID: ${{ secrets.CALENDAR_ID }} # Add this secret if not already set
-        run: /calendar/python update_calendar.py
+        run: python calendar/update_calendar.py
       - name: Commit changes
         run: |
           git config --local user.name "github-actions[bot]"
