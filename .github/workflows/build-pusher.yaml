@@ -1,0 +1,28 @@
+name: Build and Push Pusher Image
+
+on:
+#  push:
+#    paths:
+#      - 'pusher/**'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Log in to GHCR
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v4
+        with:
+          context: ./pusher
+          file: ./pusher/Dockerfile
+          push: true
+          tags: ghcr.io/lostontheline/github_push:latest

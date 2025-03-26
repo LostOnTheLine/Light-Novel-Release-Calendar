@@ -8,7 +8,8 @@ services:
       - /volume1/docker/lightnovel/data:/data
   #  ports:
   #    - 
-  #  restart: unless-stopped
+    restart: unless-stopped
+ ########################################################################################
   github_push:
     image: ghcr.io/lostontheline/github_push:latest
     container_name: github_push
