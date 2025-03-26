@@ -8,8 +8,19 @@ from datetime import datetime
 
 JSON_FILE = "light_novel_releases.json"
 CALENDAR_ID = os.getenv("CALENDAR_ID")
+SCOPES = ["https://www.googleapis.com/auth/calendar"]
 
-creds = Credentials.from_authorized_user_info(json.loads(os.getenv("GOOGLE_CREDENTIALS")))
+# Check if running locally to generate token
+if os.path.exists("credentials.json"):
+    flow = InstalledAppFlow.from_client_secrets_file("credentials.json", SCOPES)
+    creds = flow.run_local_server(port=0)
+    with open("token.json", "w") as token_file:
+        token_file.write(creds.to_json())
+    print("Token generated and saved to token.json. Update GOOGLE_CREDENTIALS with this content.")
+else:
+    # Use GitHub secret
+    creds = Credentials.from_authorized_user_info(json.loads(os.getenv("GOOGLE_CREDENTIALS")))
+
 service = build("calendar", "v3", credentials=creds)
 
 with open(JSON_FILE, "r") as f:
