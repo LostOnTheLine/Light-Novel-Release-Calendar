@@ -23,4 +23,4 @@ services:
       - /volume1/docker/lightnovel/data:/data
   #  ports:
   #    - 
-  #  restart: unless-stopped
+    restart: unless-stopped
