@@ -14,8 +14,12 @@ creds = service_account.Credentials.from_service_account_info(
     json.loads(os.getenv("GOOGLE_CREDENTIALS")),
     scopes=SCOPES
 )
-
 service = build("calendar", "v3", credentials=creds)
+
+# Initialize file if it doesn’t exist
+if not os.path.exists(JSON_FILE):
+    with open(JSON_FILE, "w") as f:
+        json.dump([], f)
 
 with open(JSON_FILE, "r") as f:
     releases = json.load(f)
