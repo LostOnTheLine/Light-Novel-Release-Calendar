@@ -1,25 +1,23 @@
 #!/bin/sh
+REPO_DIR="/data/Light-Novel-Release-Calendar"
 
-SYNC_INTERVAL_HOURS=${SYNC_INTERVAL_HOURS:-1}  # Default to 1 hour
-
-# Clone the repo if not already present
-if [ ! -d "/repo" ]; then
-    git clone https://github.com/$GITHUB_USER/$GITHUB_REPO.git /repo
+# Initialize repo if not present
+if [ ! -d "$REPO_DIR/.git" ]; then
+    mkdir -p "$REPO_DIR"
+    cd "$REPO_DIR"
+    git init
+    git remote add origin "https://$GITHUB_USER:$GITHUB_TOKEN@github.com/$GITHUB_USER/$GITHUB_REPO.git"
+    git config user.name "$GITHUB_USER"
+    git config user.email "$GITHUB_EMAIL"
+    git pull origin main || git commit --allow-empty -m "Initial commit" && git push origin main
 fi
 
-cd /repo
-
+# Sync loop
 while true; do
-    # Copy the JSON file
-    cp /data/light_novel_releases.json .
-    
-    # Git operations
-    git config --global user.name "$GITHUB_USER"
-    git config --global user.email "$GITHUB_EMAIL"
-    git add light_novel_releases.json
-    git commit -m "Update light novel releases - $(date -u)" || echo "No changes to commit"
-    git push https://$GITHUB_TOKEN@github.com/$GITHUB_USER/$GITHUB_REPO.git main
-    
-    echo "Pushed to GitHub at $(date -u)"
-    sleep $(($SYNC_INTERVAL_HOURS * 3600))  # Convert hours to seconds
+    cd "$REPO_DIR"
+    git pull origin main
+    git add .
+    git commit -m "Update releases from scraper" || echo "No changes to commit"
+    git push origin main
+    sleep $((${SYNC_INTERVAL_HOURS:-1} * 3600))
 done

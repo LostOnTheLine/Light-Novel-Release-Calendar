@@ -5,7 +5,7 @@ from googleapiclient.discovery import build
 from dateutil.parser import parse
 from datetime import datetime
 
-JSON_FILE = "light_novel_releases.json"
+JSON_FILE = "data/light_novel_releases.json"
 CALENDAR_ID = os.getenv("CALENDAR_ID")
 SCOPES = ["https://www.googleapis.com/auth/calendar"]
 
@@ -18,6 +18,7 @@ service = build("calendar", "v3", credentials=creds)
 
 # Initialize file if it doesn’t exist
 if not os.path.exists(JSON_FILE):
+    os.makedirs(os.path.dirname(JSON_FILE), exist_ok=True)
     with open(JSON_FILE, "w") as f:
         json.dump([], f)
 
