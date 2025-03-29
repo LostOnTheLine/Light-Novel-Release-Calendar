@@ -1,0 +1,8 @@
+{
+  "publishers": {
+    "Seven Seas": {"color": "#076155"},
+    "J-Novel Club": {"color": "#0056a8"},
+    "Yen Press": {"color": "#6ebe45"},
+    "Default": {"color": "#808080"}
+  }
+}
