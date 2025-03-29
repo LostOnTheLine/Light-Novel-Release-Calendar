@@ -24,7 +24,7 @@ jobs:
         run: python calendar/diagnose_metadata.py
         
       - name: Upload diagnosis results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v3.1.3  # Explicitly specify latest v3 release
         with:
           name: metadata-diagnosis
           path: metadata_diagnosis.json
