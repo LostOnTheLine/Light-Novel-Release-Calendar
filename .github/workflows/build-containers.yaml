@@ -8,18 +8,16 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
+  build-scraper:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      
       - name: Log in to GHCR
         uses: docker/login-action@v2
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GHCR_TOKEN }}
-
       - name: Build and push Scraper image
         uses: docker/build-push-action@v4
         with:
@@ -28,6 +26,16 @@ jobs:
           push: true
           tags: ghcr.io/lostontheline/lightnovel_scraper:latest
 
+  build-pusher:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Log in to GHCR
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GHCR_TOKEN }}
       - name: Build and push Pusher image
         uses: docker/build-push-action@v4
         with:
@@ -35,3 +43,10 @@ jobs:
           file: ./pusher/Dockerfile
           push: true
           tags: ghcr.io/lostontheline/github_push:latest
+
+  finalize:
+    runs-on: ubuntu-latest
+    needs: [build-scraper, build-pusher]
+    steps:
+      - name: Build Complete
+        run: echo "Both container images built and pushed successfully"

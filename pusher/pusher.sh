@@ -25,8 +25,28 @@ while true; do
     git fetch origin
     git checkout main  # Ensure on main branch
     git pull origin main
+    
+    # Check for changes
     git add .
-    git commit -m "Update releases from scraper" || echo "No changes to commit"
-    git push origin main
+    if git status --porcelain | grep -q .; then
+        # Count added and updated lines in JSON file
+        added=$(git diff --cached --numstat | grep "data/light_novel_releases.json" | awk '{print $1}' || echo 0)
+        updated=$(git diff --cached --numstat | grep "data/light_novel_releases.json" | awk '{print $2}' || echo 0)
+        
+        # Handle case where file is new (no deletions)
+        if [ "$added" -gt 0 ] && [ "$updated" -eq 0 ]; then
+            msg="Added $added releases from scraper"
+        elif [ "$added" -gt 0 ] || [ "$updated" -gt 0 ]; then
+            msg="Updated $updated releases from scraper, added $added release(s) from scraper"
+        else
+            msg="Minor updates from scraper"
+        fi
+        
+        git commit -m "$msg"
+        git push origin main
+    else
+        echo "No changes to commit"
+    fi
+    
     sleep $((${SYNC_INTERVAL_HOURS:-1} * 3600))
 done
