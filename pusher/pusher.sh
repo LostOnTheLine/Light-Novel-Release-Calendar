@@ -5,17 +5,18 @@ REPO_DIR="${REPO_DIR:-/git}"  # Default to /git
 if [ ! -d "$REPO_DIR/.git" ]; then
     mkdir -p "$REPO_DIR"
     cd "$REPO_DIR"
-    git init
-    git remote add origin "https://$GITHUB_USER:$GITHUB_TOKEN@github.com/$GITHUB_USER/$GITHUB_REPO.git"
+    git init -b main  # Set initial branch to main
+    git remote add origin https://$GITHUB_USER:$GITHUB_TOKEN@github.com/$GITHUB_USER/$GITHUB_REPO.git
     git config user.name "$GITHUB_USER"
     git config user.email "$GITHUB_EMAIL"
-    git checkout -b main || git checkout main
-    git pull origin main || git commit --allow-empty -m "Initial commit" && git push origin main
+    git pull origin main || { git commit --allow-empty -m "Initial commit" && git push origin main; }
 fi
 
 # Sync loop
 while true; do
     cd "$REPO_DIR"
+    git fetch origin
+    git checkout main  # Ensure on main branch
     git pull origin main
     git add .
     git commit -m "Update releases from scraper" || echo "No changes to commit"
