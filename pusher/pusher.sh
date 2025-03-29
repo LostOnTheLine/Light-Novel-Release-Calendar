@@ -1,5 +1,5 @@
 #!/bin/sh
-REPO_DIR="/data/Light-Novel-Release-Calendar"
+REPO_DIR="${REPO_DIR:-/git}"  # Default to /git
 
 # Initialize repo if not present
 if [ ! -d "$REPO_DIR/.git" ]; then
@@ -9,6 +9,7 @@ if [ ! -d "$REPO_DIR/.git" ]; then
     git remote add origin "https://$GITHUB_USER:$GITHUB_TOKEN@github.com/$GITHUB_USER/$GITHUB_REPO.git"
     git config user.name "$GITHUB_USER"
     git config user.email "$GITHUB_EMAIL"
+    git checkout -b main || git checkout main
     git pull origin main || git commit --allow-empty -m "Initial commit" && git push origin main
 fi
 
