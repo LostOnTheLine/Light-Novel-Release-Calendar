@@ -5,6 +5,7 @@ import os
 import sys
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
+import re
 
 SAMPLES = {
     "Seven Seas": "https://sevenseasentertainment.com/books/theres-no-freaking-way-ill-be-your-lover-unless-light-novel-vol-6/",
@@ -12,10 +13,14 @@ SAMPLES = {
     "Yen Press": "https://yenpress.com/titles/9781975392536-re-starting-life-in-another-world-short-story-collection-vol-2-light-novel"
 }
 
+HEADERS = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+}
+
 def diagnose_page(url):
     print(f"Diagnosing {url}")
     try:
-        response = requests.get(url)
+        response = requests.get(url, headers=HEADERS)
         response.raise_for_status()
         soup = BeautifulSoup(response.text, "html.parser")
         data = {}
@@ -48,11 +53,20 @@ def clear_calendar(calendar_id, creds):
     print("Attempting to clear calendar")
     try:
         service = build("calendar", "v3", credentials=creds)
-        events = service.events().list(calendarId=calendar_id).execute()
-        for event in events.get("items", []):
-            service.events().delete(calendarId=calendar_id, eventId=event["id"]).execute()
-            print(f"Deleted event: {event['summary']}")
-        print("Calendar cleared")
+        page_token = None
+        event_count = 0
+        while True:
+            events = service.events().list(calendarId=calendar_id, pageToken=page_token).execute()
+            items = events.get("items", [])
+            print(f"Found {len(items)} events in this page")
+            for event in items:
+                service.events().delete(calendarId=calendar_id, eventId=event["id"]).execute()
+                print(f"Deleted event: {event['summary']}")
+                event_count += 1
+            page_token = events.get("nextPageToken")
+            if not page_token:
+                break
+        print(f"Calendar cleared, {event_count} events deleted")
     except Exception as e:
         print(f"Error clearing calendar: {str(e)}")
         sys.exit(1)
