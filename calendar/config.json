@@ -3,6 +3,6 @@
     "Seven Seas": {"color": "#578dc9", "colorId": "7", "colorName": "Peacock"},
     "J-Novel Club": {"color": "#0056a8", "colorId": "9", "colorName": "Blueberry"},
     "Yen Press": {"color": "#6ebe45", "colorId": "10", "colorName": "Basil"},
-    "Default": {"color": "#808080", "colorId": "8", "colorName": "Light grey"}
+    "Default": {"color": "#808080", "colorId": "8", "colorName": "Graphite"}
   }
 }
