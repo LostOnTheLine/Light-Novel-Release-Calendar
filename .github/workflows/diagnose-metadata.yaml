@@ -23,8 +23,13 @@ jobs:
           CALENDAR_ID: ${{ secrets.CALENDAR_ID }}
         run: python calendar/diagnose_metadata.py
         
+      - name: Verify diagnosis file exists
+        run: |
+          ls -la metadata_diagnosis.json || echo "File not found"
+          cat metadata_diagnosis.json || echo "Unable to read file"
+          
       - name: Upload diagnosis results
-        uses: actions/upload-artifact@v3.1.3  # Explicitly specify latest v3 release
+        uses: actions/upload-artifact@v4  # Updated to v4
         with:
           name: metadata-diagnosis
           path: metadata_diagnosis.json
