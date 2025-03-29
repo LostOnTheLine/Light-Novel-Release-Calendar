@@ -1,8 +1,8 @@
 {
   "publishers": {
-    "Seven Seas": {"color": "#076155"},
-    "J-Novel Club": {"color": "#0056a8"},
-    "Yen Press": {"color": "#6ebe45"},
-    "Default": {"color": "#808080"}
+    "Seven Seas": {"color": "#578dc9", "colorId": "7"},  # Peacock
+    "J-Novel Club": {"color": "#0056a8", "colorId": "9"},  # Blueberry
+    "Yen Press": {"color": "#6ebe45", "colorId": "10"},  # Basil
+    "Default": {"color": "#808080", "colorId": "8"}  # Light grey
   }
 }

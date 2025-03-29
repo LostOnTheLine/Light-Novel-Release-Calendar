@@ -52,7 +52,8 @@ with open(JSON_FILE, "r") as f:
 
 updated = False
 for release in releases:
-    publisher_color = publisher_colors.get(release["publisher"], publisher_colors["Default"])["color"]
+    # publisher_color = publisher_colors.get(release["publisher"], publisher_colors["Default"])["color"]
+    event["colorId"] = publisher_colors.get(release["publisher"], publisher_colors["Default"])["colorId"]
     rss_link = release.get("rss_feed", "")
     rss_icon = f'<a href="{rss_link}"><img src="https://upload.wikimedia.org/wikipedia/commons/4/43/Feed-icon.svg" width="16" height="16" alt="RSS"></a>' if rss_link else ""
     
