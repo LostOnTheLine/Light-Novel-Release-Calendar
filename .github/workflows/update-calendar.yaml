@@ -1,29 +1,35 @@
 name: Update Google Calendar
 
 on:
+  # push:
+  #   branches: [main]
+  # schedule:
+  #   - cron: "0 0 * * *" # Runs daily at midnight UTC
   workflow_dispatch:  # Manual trigger
- # push:
- #   branches: [main]
- # schedule:
- #   - cron: "0 0 * * *" # Runs daily at midnight UTC
 
 jobs:
   update-calendar:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+      
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: "3.9"
+          
       - name: Install dependencies
         run: pip install google-auth-oauthlib google-auth-httplib2 google-api-python-client python-dateutil
+        
       - name: Run calendar updater
         env:
           GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}
           CALENDAR_ID: ${{ secrets.CALENDAR_ID }} # Add this secret if not already set
         run: python calendar/update_calendar.py
+        
       - name: Commit changes
+        env:
+          GITHUB_TOKEN: ${{ secrets.GHCR_TOKEN }}  # Use PAT with repo write access
         run: |
           git config --local user.name "github-actions[bot]"
           git config --local user.email "github-actions[bot]@users.noreply.github.com"

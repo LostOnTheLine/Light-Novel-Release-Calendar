@@ -8,6 +8,11 @@ from dateutil.parser import parse
 import os
 import time
 import re
+import logging
+
+# Setup logging
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+logger = logging.getLogger(__name__)
 
 BASE_URL = "https://jnovels.com/release-date/"
 OUTPUT_FILE = "/git/data/light_novel_releases.json"  # Inside data/ subdir
@@ -51,6 +56,7 @@ def extract_collection(title, volume):
     return collection
 
 async def scrape_page():
+    logger.info("Starting scrape of %s", BASE_URL)
     response = requests.get(BASE_URL)
     soup = BeautifulSoup(response.text, "html.parser")
     tables = soup.find_all("table")
@@ -59,21 +65,21 @@ async def scrape_page():
     if os.path.exists(OUTPUT_FILE):
         with open(OUTPUT_FILE, "r") as f:
             existing_data = json.load(f)
+        logger.info("Loaded existing data from %s", OUTPUT_FILE)
     else:
         existing_data = []
+        logger.info("No existing data found; starting fresh")
     
     # Convert existing data to dict for lookup
     existing_dict = {f"{item['title']}-{item['volume_number']}": item for item in existing_data}
     
     releases = []
-    current_year = "2025"  # Hardcoded for now; adjust if site changes
     
     async with aiohttp.ClientSession() as session:
         tasks = []
         for table in tables:
             prev_h1 = table.find_previous("h1")
-            if prev_h1:
-                current_year = prev_h1.text.split()[-1]  # e.g., "March 2025" -> "2025"
+            current_year = prev_h1.text.split()[-1] if prev_h1 else "2025"  # Fallback to 2025 if no h1
             
             for row in table.find("tbody").find_all("tr"):
                 cols = row.find_all("td")
@@ -120,6 +126,7 @@ async def scrape_page():
     os.makedirs(os.path.dirname(OUTPUT_FILE), exist_ok=True)  # Create data/ if missing
     with open(OUTPUT_FILE, "w") as f:
         json.dump(releases, f, indent=2)
+    logger.info("Scraped data saved to %s", OUTPUT_FILE)
     print(f"Scraped data saved to {OUTPUT_FILE} at {datetime.utcnow()}")
 
 if __name__ == "__main__":

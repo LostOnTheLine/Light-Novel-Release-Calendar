@@ -1,5 +1,6 @@
 #!/bin/sh
 REPO_DIR="${REPO_DIR:-/git}"  # Default to /git
+FIRST_PUSH_DELAY="${FIRST_PUSH_DELAY:-60}"  # Default 60 seconds
 
 # Initialize repo if not present
 if [ ! -d "$REPO_DIR/.git" ]; then
@@ -12,6 +13,10 @@ if [ ! -d "$REPO_DIR/.git" ]; then
     git config user.email "$GITHUB_EMAIL"
     git pull origin main || { git commit --allow-empty -m "Initial commit" && git push origin main; }
 fi
+
+# Initial delay before first push
+echo "Waiting $FIRST_PUSH_DELAY seconds before first push..."
+sleep "$FIRST_PUSH_DELAY"
 
 # Sync loop
 while true; do
