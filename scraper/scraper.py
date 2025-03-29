@@ -52,8 +52,7 @@ async def fetch_metadata(session, url, volume):
 
 def extract_collection(title, volume):
     # Simple extraction: remove "Volume X" or "Vol. X"
-    collection = re.sub(rf"\s*(Volume|Vol\.?)\s*{re.escape(volume)}\b", "", title, flags=re.IGNORECASE).strip()
-    return collection
+    return re.sub(rf"\s*(Volume|Vol\.?)\s*{re.escape(volume)}\b", "", title, flags=re.IGNORECASE).strip()
 
 async def scrape_page():
     logger.info("Starting scrape of %s", BASE_URL)
@@ -64,16 +63,17 @@ async def scrape_page():
     # Load existing data or initialize as empty list
     if os.path.exists(OUTPUT_FILE):
         with open(OUTPUT_FILE, "r") as f:
-            existing_data = json.load(f)
-        logger.info("Loaded existing data from %s", OUTPUT_FILE)
+            data = json.load(f)
+        existing_data = data.get("releases", [])
+        stats = data.get("general_statistics", {})
     else:
         existing_data = []
-        logger.info("No existing data found; starting fresh")
+        stats = {}
     
     # Convert existing data to dict for lookup
     existing_dict = {f"{item['title']}-{item['volume_number']}": item for item in existing_data}
-    
     releases = []
+    updated_books = []
     
     async with aiohttp.ClientSession() as session:
         tasks = []
@@ -94,7 +94,6 @@ async def scrape_page():
                     date_obj = parse(f"{current_year} {release_date}", dayfirst=False)
                     formatted_date = date_obj.strftime("%Y-%m-%d")
                     collection = extract_collection(title, volume)
-                    
                     key = f"{title}-{volume}"
                     existing_entry = existing_dict.get(key, {})
                     
@@ -107,27 +106,51 @@ async def scrape_page():
                         "book_link": purchase_link,
                         "release_type": release_type,
                         "last_updated": existing_entry.get("last_updated", datetime.utcnow().isoformat()),
-                        "google_calendar_added": existing_entry.get("google_calendar_added", None)
+                        "google_calendar_added": existing_entry.get("google_calendar_added"),
+                        "book_cover": existing_entry.get("book_cover"),
+                        "description": existing_entry.get("description", "No description available"),
+                        "rss_feed": existing_entry.get("rss_feed")
                     }
                     
                     # Update last_updated only if data changed
-                    if (existing_entry.get("release_date") != formatted_date or
+                    changed = (
+                        existing_entry.get("release_date") != formatted_date or
                         existing_entry.get("publisher") != publisher or
-                        existing_entry.get("release_type") != release_type):
+                        existing_entry.get("release_type") != release_type
+                    )
+                    if changed:
                         entry["last_updated"] = datetime.utcnow().isoformat()
+                        updated_books.append(title)
                     
                     releases.append(entry)
-                    tasks.append(fetch_metadata(session, purchase_link, volume))
+                    if changed or not existing_entry.get("book_cover"):
+                        tasks.append(fetch_metadata(session, purchase_link, volume))
+                    else:
+                        releases[-1].update({
+                            "book_cover": existing_entry.get("book_cover"),
+                            "description": existing_entry.get("description"),
+                            "rss_feed": existing_entry.get("rss_feed")
+                        })
         
         metadata = await asyncio.gather(*tasks)
         for i, meta in enumerate(metadata):
-            releases[i].update(meta)
+            releases[i + len(releases) - len(tasks)].update(meta)
     
-    os.makedirs(os.path.dirname(OUTPUT_FILE), exist_ok=True)  # Create data/ if missing
+    os.makedirs(os.path.dirname(OUTPUT_FILE), exist_ok=True)
+    now = datetime.utcnow().isoformat()
+    latest_runs = stats.get("latest_runs", [])
+    latest_runs.insert(0, now)
+    stats["latest_runs"] = latest_runs[:3]
+    
+    updates_processed = stats.get("updates_processed", [])
+    updates_processed.insert(0, len(updated_books))
+    stats["updates_processed"] = updates_processed[:3]
+    
+    stats["books_updated"] = updated_books
+    
     with open(OUTPUT_FILE, "w") as f:
-        json.dump(releases, f, indent=2)
+        json.dump({"general_statistics": stats, "releases": releases}, f, indent=2)
     logger.info("Scraped data saved to %s", OUTPUT_FILE)
-    print(f"Scraped data saved to {OUTPUT_FILE} at {datetime.utcnow()}")
 
 if __name__ == "__main__":
     while True:

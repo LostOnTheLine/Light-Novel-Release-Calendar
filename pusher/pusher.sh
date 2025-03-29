@@ -29,19 +29,9 @@ while true; do
     # Check for changes
     git add .
     if git status --porcelain | grep -q .; then
-        # Count added and updated lines in JSON file
-        added=$(git diff --cached --numstat | grep "data/light_novel_releases.json" | awk '{print $1}' || echo 0)
-        updated=$(git diff --cached --numstat | grep "data/light_novel_releases.json" | awk '{print $2}' || echo 0)
-        
-        # Handle case where file is new (no deletions)
-        if [ "$added" -gt 0 ] && [ "$updated" -eq 0 ]; then
-            msg="Added $added releases from scraper"
-        elif [ "$added" -gt 0 ] || [ "$updated" -gt 0 ]; then
-            msg="Updated $updated releases from scraper, added $added release(s) from scraper"
-        else
-            msg="Minor updates from scraper"
-        fi
-        
+        updates=$(jq -r '.general_statistics.updates_processed[0]' data/light_novel_releases.json)
+        books=$(jq -r '.general_statistics.books_updated | join(", ")' data/light_novel_releases.json)
+        msg="Processed $updates book updates: $books"
         git commit -m "$msg"
         git push origin main
     else

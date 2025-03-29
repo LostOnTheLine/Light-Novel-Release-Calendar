@@ -45,10 +45,11 @@ def insert_event_with_retry(event, max_retries=5):
 if not os.path.exists(JSON_FILE):
     os.makedirs(os.path.dirname(JSON_FILE), exist_ok=True)
     with open(JSON_FILE, "w") as f:
-        json.dump([], f)
+        json.dump({"general_statistics": {}, "releases": []}, f)
 
 with open(JSON_FILE, "r") as f:
-    releases = json.load(f)
+    data = json.load(f)
+releases = data["releases"]
 
 updated = False
 for release in releases:
@@ -67,7 +68,7 @@ for release in releases:
         f'{release["description"]}'
         f'</div>'
         f'<div style="text-align: right;">'
-        f'<img src="{release["book_cover"]}" style="max-width: 150px;" alt="Book Cover">'
+        f'<a href="{release["book_cover"]}">{release["title"]} Cover</a>' if release.get("book_cover") else ""
         f'</div>'
         f'</div>'
     )
@@ -83,17 +84,15 @@ for release in releases:
         }
     }
 
-    if not release.get("google_calendar_added"):
-        if insert_event_with_retry(event):
-            release["google_calendar_added"] = datetime.utcnow().isoformat()
-            updated = True
-    elif parse(release["last_updated"]) > parse(release["google_calendar_added"]):
-        if insert_event_with_retry(event):
-            release["google_calendar_added"] = datetime.utcnow().isoformat()
-            updated = True
+    should_update = not release.get("google_calendar_added") or (
+        parse(release["last_updated"]) > parse(release["google_calendar_added"] or "1970-01-01")
+    )
+    if should_update and insert_event_with_retry(event):
+        release["google_calendar_added"] = datetime.utcnow().isoformat()
+        updated = True
 
 if updated:
     with open(JSON_FILE, "w") as f:
-        json.dump(releases, f, indent=2)
+        json.dump(data, f, indent=2)
 
 print("Calendar updated")
