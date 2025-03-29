@@ -10,8 +10,8 @@ import time
 import re
 
 BASE_URL = "https://jnovels.com/release-date/"
-OUTPUT_FILE = "/data/light_novel_releases.json"
-SYNC_INTERVAL_HOURS = float(os.getenv("SYNC_INTERVAL_HOURS", 1))  # Default to 1 hour
+OUTPUT_FILE = "/git/data/light_novel_releases.json"  # Inside data/ subdir
+SYNC_INTERVAL_HOURS = float(os.getenv("SYNC_INTERVAL_HOURS", 12))  # Default to 12 hour
 
 async def fetch_metadata(session, url, volume):
     async with session.get(url) as response:
@@ -117,6 +117,7 @@ async def scrape_page():
         for i, meta in enumerate(metadata):
             releases[i].update(meta)
     
+    os.makedirs(os.path.dirname(OUTPUT_FILE), exist_ok=True)  # Create data/ if missing
     with open(OUTPUT_FILE, "w") as f:
         json.dump(releases, f, indent=2)
     print(f"Scraped data saved to {OUTPUT_FILE} at {datetime.utcnow()}")
