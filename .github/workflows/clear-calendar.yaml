@@ -1,0 +1,24 @@
+name: Clear Google Calendar
+
+on:
+  workflow_dispatch:  # Manual trigger only
+
+jobs:
+  clear:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.9"
+          
+      - name: Install dependencies
+        run: pip install google-auth-oauthlib google-auth-httplib2 google-api-python-client
+        
+      - name: Run calendar clear script
+        env:
+          GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}
+          CALENDAR_ID: ${{ secrets.CALENDAR_ID }}
+        run: python calendar/clear_calendar.py
