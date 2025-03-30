@@ -1,10 +1,6 @@
 import requests
 from bs4 import BeautifulSoup
 import json
-import os
-import sys
-from google.oauth2 import service_account
-from googleapiclient.discovery import build
 import re
 
 SAMPLES = {
@@ -49,47 +45,8 @@ def diagnose_page(url):
         print(f"Error diagnosing {url}: {str(e)}")
         return {"error": str(e)}
 
-def clear_calendar(calendar_id, creds):
-    print("Attempting to clear calendar")
-    try:
-        service = build("calendar", "v3", credentials=creds)
-        page_token = None
-        event_count = 0
-        while True:
-            events = service.events().list(calendarId=calendar_id, pageToken=page_token).execute()
-            items = events.get("items", [])
-            print(f"Found {len(items)} events in this page")
-            for event in items:
-                service.events().delete(calendarId=calendar_id, eventId=event["id"]).execute()
-                print(f"Deleted event: {event['summary']}")
-                event_count += 1
-            page_token = events.get("nextPageToken")
-            if not page_token:
-                break
-        print(f"Calendar cleared, {event_count} events deleted")
-    except Exception as e:
-        print(f"Error clearing calendar: {str(e)}")
-        sys.exit(1)
-
 if __name__ == "__main__":
-    print("Starting diagnosis")
-    google_creds = os.getenv("GOOGLE_CREDENTIALS")
-    calendar_id = os.getenv("CALENDAR_ID")
-    
-    if not google_creds or not calendar_id:
-        print(f"Missing environment variables: GOOGLE_CREDENTIALS={bool(google_creds)}, CALENDAR_ID={bool(calendar_id)}")
-        sys.exit(1)
-    
-    try:
-        creds = service_account.Credentials.from_service_account_info(
-            json.loads(google_creds),
-            scopes=["https://www.googleapis.com/auth/calendar"]
-        )
-    except Exception as e:
-        print(f"Error parsing GOOGLE_CREDENTIALS: {str(e)}")
-        sys.exit(1)
-    
-    clear_calendar(calendar_id, creds)
+    print("Starting local diagnosis (no credentials required)")
     results = {publisher: diagnose_page(url) for publisher, url in SAMPLES.items()}
     
     with open("metadata_diagnosis.json", "w") as f:
