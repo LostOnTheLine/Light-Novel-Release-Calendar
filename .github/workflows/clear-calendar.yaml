@@ -17,7 +17,7 @@ jobs:
       - name: Install dependencies
         run: pip install google-auth-oauthlib google-auth-httplib2 google-api-python-client
         
-      - name: Run calendar clear script
+      - name: Clear calendar
         env:
           GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}
           CALENDAR_ID: ${{ secrets.CALENDAR_ID }}
